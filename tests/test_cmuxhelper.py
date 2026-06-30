@@ -1,0 +1,18 @@
+import unittest
+import cmuxhelper
+
+
+class ParseSavedHostsTests(unittest.TestCase):
+    def test_skips_blank_and_comment_lines(self):
+        text = "app@10.1.2.34\n\n# a comment\n  dev@10.1.2.32  \n"
+        self.assertEqual(
+            cmuxhelper.parse_saved_hosts(text),
+            ["app@10.1.2.34", "dev@10.1.2.32"],
+        )
+
+    def test_empty_input(self):
+        self.assertEqual(cmuxhelper.parse_saved_hosts(""), [])
+
+
+if __name__ == "__main__":
+    unittest.main()
