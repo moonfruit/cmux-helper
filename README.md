@@ -1,0 +1,33 @@
+# cmux-helper
+
+Alfred workflow：关键词 `ssh` 选择预设 SSH 主机，经 cmux 连接。
+
+## 操作
+
+- `↵`：`cmux ssh user@host` 新建 workspace 并把 cmux 激活到前台
+- `⌘ ↵`：向当前 cmux 终端发送 `ssh user@host`（`cmux send`）
+- `⌥ ↵`：设置/清除该主机的别名与标签（写入 `aliases.json`）
+
+> `↵` / `⌘ ↵` 执行前会先 `cmux ping` 确认 cmux 已运行；若未运行，弹出通知提示先手动启动 cmux，不再尝试冷启动。
+
+## 主机来源
+
+- `~/.ssh/saved_hosts`（每行 `user@host`）
+- `~/.ssh/config` 的 `Host` 条目（跳过通配符模式）
+
+## 安装
+
+依赖：`/opt/homebrew/bin/python3`、`cmux` CLI。
+
+- 开发软链：`make link`（改完即生效），卸载 `make unlink`
+- 打包分发：`make package` 生成 `cmux-helper.alfredworkflow`，双击导入 Alfred
+
+## 测试
+
+`make test`
+
+## 别名数据
+
+存于 `~/.ssh/aliases.json`（与 `saved_hosts`/`config` 同目录，便于手动编辑），形如：
+
+    { "app@10.1.2.34": { "alias": "生产A", "tags": ["prod", "app"] } }
