@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """cmux-helper: Alfred workflow backend for SSH host selection via cmux."""
 
+import json
 import os
 
 
@@ -67,3 +68,40 @@ def collect_hosts(saved_hosts_path=DEFAULT_SAVED_HOSTS, ssh_config_path=DEFAULT_
             seen.add(host)
             hosts.append(host)
     return hosts
+
+
+def load_aliases(path):
+    """Load aliases from JSON file. Return {} on missing/corrupt/non-dict."""
+    try:
+        with open(os.path.expanduser(path), "r", encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def save_aliases(path, data):
+    """Save aliases to JSON file. Auto-create parent dir, ensure_ascii=False, indent=2."""
+    full = os.path.expanduser(path)
+    parent = os.path.dirname(full)
+    if parent:
+        os.makedirs(parent, exist_ok=True)
+    with open(full, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+
+
+def apply_alias(data, host, alias, tags):
+    """Apply alias to host. Strip whitespace, remove empty tags, delete if both empty."""
+    result = dict(data)
+    alias = alias.strip()
+    tags = [t.strip() for t in tags if t.strip()]
+    if not alias and not tags:
+        result.pop(host, None)
+        return result
+    entry = {}
+    if alias:
+        entry["alias"] = alias
+    if tags:
+        entry["tags"] = tags
+    result[host] = entry
+    return result

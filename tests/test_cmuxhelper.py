@@ -1,3 +1,4 @@
+import json
 import os
 import tempfile
 import unittest
@@ -55,6 +56,33 @@ class CollectHostsTests(unittest.TestCase):
             cmuxhelper.collect_hosts("/no/such/saved", "/no/such/config"),
             [],
         )
+
+
+class AliasTests(unittest.TestCase):
+    def test_load_missing_returns_empty(self):
+        self.assertEqual(cmuxhelper.load_aliases("/no/such/aliases.json"), {})
+
+    def test_load_corrupt_returns_empty(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "a.json")
+            with open(p, "w") as f:
+                f.write("not json{")
+            self.assertEqual(cmuxhelper.load_aliases(p), {})
+
+    def test_save_then_load_roundtrip(self):
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "sub", "aliases.json")
+            data = {"app@h": {"alias": "生产", "tags": ["prod"]}}
+            cmuxhelper.save_aliases(p, data)
+            self.assertEqual(cmuxhelper.load_aliases(p), data)
+
+    def test_apply_sets_entry(self):
+        out = cmuxhelper.apply_alias({}, "app@h", " 生产A ", [" prod ", "", "app"])
+        self.assertEqual(out, {"app@h": {"alias": "生产A", "tags": ["prod", "app"]}})
+
+    def test_apply_empty_removes_entry(self):
+        out = cmuxhelper.apply_alias({"app@h": {"alias": "x"}}, "app@h", "  ", ["", " "])
+        self.assertEqual(out, {})
 
 
 if __name__ == "__main__":
