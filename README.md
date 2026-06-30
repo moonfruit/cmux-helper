@@ -26,6 +26,6 @@ Alfred workflow：关键词 `ssh` 选择预设 SSH 主机，经 cmux 连接。
 
 ## 别名数据
 
-存于 `$alfred_workflow_data/aliases.json`，形如：
+存于 `~/.ssh/aliases.json`（与 `saved_hosts`/`config` 同目录，便于手动编辑），形如：
 
     { "app@10.1.2.34": { "alias": "生产A", "tags": ["prod", "app"] } }

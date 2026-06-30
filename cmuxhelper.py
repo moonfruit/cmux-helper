@@ -146,19 +146,21 @@ def build_alfred_items(hosts, aliases):
 
 
 def cmd_ssh(dest):
-    return [["cmux", "ssh", dest], ["open", "-a", "cmux"]]
+    # Activate cmux first so the app is frontmost before `cmux ssh` runs,
+    # which is noticeably snappier than the reverse order.
+    return [["open", "-a", "cmux"], ["cmux", "ssh", dest]]
 
 
 def cmd_send(dest, workspace):
     return [
-        ["cmux", "send", "--workspace", workspace, "ssh %s\\n" % dest],
         ["open", "-a", "cmux"],
+        ["cmux", "send", "--workspace", workspace, "ssh %s\\n" % dest],
     ]
 
 
 def aliases_path():
-    data_dir = os.environ.get("alfred_workflow_data") or os.path.expanduser("~/.cmux-helper")
-    return os.path.join(data_dir, "aliases.json")
+    # Keep aliases alongside saved_hosts/config so users can hand-edit them.
+    return os.path.expanduser("~/.ssh/aliases.json")
 
 
 def _notify(message):

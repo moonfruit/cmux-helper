@@ -17,5 +17,5 @@ unlink:
 
 package:
 	rm -f "$(PKG)"
-	zip -r "$(PKG)" info.plist cmuxhelper.py README.md -x '*.pyc'
+	zip -r "$(PKG)" info.plist cmuxhelper.py icon.png README.md -x '*.pyc'
 	@echo "Built $(PKG)"
