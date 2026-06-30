@@ -2,6 +2,7 @@ import json
 import os
 import tempfile
 import unittest
+from unittest import mock
 import cmuxhelper
 
 
@@ -177,6 +178,36 @@ class AppleScriptStrTests(unittest.TestCase):
 
     def test_escapes_quote_and_backslash(self):
         self.assertEqual(cmuxhelper._as_applescript('a"b\\c'), '"a\\"b\\\\c"')
+
+
+class EmptyHostsPlaceholderTests(unittest.TestCase):
+    def test_empty_hosts_yields_invalid_placeholder(self):
+        out = cmuxhelper.build_alfred_items([], {})
+        items = out["items"]
+        self.assertEqual(len(items), 1)
+        self.assertFalse(items[0]["valid"])
+        self.assertIn("未找到主机", items[0]["title"])
+
+    def test_nonempty_hosts_have_no_placeholder(self):
+        out = cmuxhelper.build_alfred_items(["app@h"], {})
+        self.assertEqual(len(out["items"]), 1)
+        self.assertNotIn("valid", out["items"][0])
+
+
+class RunTests(unittest.TestCase):
+    def test_missing_command_does_not_raise_and_stops(self):
+        attempted = []
+
+        def fake_run(cmd, **kwargs):
+            attempted.append(cmd[0])
+            raise FileNotFoundError(cmd[0])
+
+        with mock.patch.object(cmuxhelper.subprocess, "run", side_effect=fake_run):
+            cmuxhelper._run([["cmux", "ssh", "x"], ["open", "-a", "cmux"]])
+
+        # cmux missing -> reported, and `open` is not attempted afterwards
+        self.assertEqual(attempted.count("cmux"), 1)
+        self.assertNotIn("open", attempted)
 
 
 if __name__ == "__main__":
