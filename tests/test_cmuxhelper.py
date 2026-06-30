@@ -108,16 +108,16 @@ class BuildItemsTests(unittest.TestCase):
 
 
 class CommandTests(unittest.TestCase):
-    def test_cmd_ssh_opens_app_first(self):
+    def test_cmd_ssh(self):
         self.assertEqual(
             cmuxhelper.cmd_ssh("app@h"),
-            [["open", "-a", "cmux"], ["cmux", "ssh", "app@h"]],
+            [["cmux", "ssh", "app@h"], ["open", "-a", "cmux"]],
         )
 
-    def test_cmd_send_opens_app_first_with_literal_newline(self):
+    def test_cmd_send_has_literal_newline(self):
         cmds = cmuxhelper.cmd_send("app@h", "workspace:1")
-        self.assertEqual(cmds[0], ["open", "-a", "cmux"])
-        self.assertEqual(cmds[1], ["cmux", "send", "--workspace", "workspace:1", "ssh app@h\\n"])
+        self.assertEqual(cmds[0], ["cmux", "send", "--workspace", "workspace:1", "ssh app@h\\n"])
+        self.assertEqual(cmds[1], ["open", "-a", "cmux"])
 
     def test_aliases_path_in_ssh_dir(self):
         self.assertEqual(
@@ -177,6 +177,55 @@ class AppleScriptStrTests(unittest.TestCase):
 
     def test_escapes_quote_and_backslash(self):
         self.assertEqual(cmuxhelper._as_applescript('a"b\\c'), '"a\\"b\\\\c"')
+
+
+class CmuxRunningTests(unittest.TestCase):
+    def test_running_when_ping_exits_zero(self):
+        with mock.patch.object(
+            cmuxhelper.subprocess, "run", return_value=mock.Mock(returncode=0)
+        ) as m:
+            self.assertTrue(cmuxhelper.cmux_running())
+        self.assertEqual(m.call_args[0][0], ["cmux", "ping"])
+
+    def test_not_running_when_ping_nonzero(self):
+        with mock.patch.object(
+            cmuxhelper.subprocess, "run", return_value=mock.Mock(returncode=1)
+        ):
+            self.assertFalse(cmuxhelper.cmux_running())
+
+    def test_not_running_when_cmux_missing(self):
+        with mock.patch.object(
+            cmuxhelper.subprocess, "run", side_effect=FileNotFoundError
+        ):
+            self.assertFalse(cmuxhelper.cmux_running())
+
+
+class MainGateTests(unittest.TestCase):
+    def test_connect_aborts_and_notifies_when_not_running(self):
+        with mock.patch.object(cmuxhelper, "cmux_running", return_value=False), \
+                mock.patch.object(cmuxhelper, "_run") as run, \
+                mock.patch.object(cmuxhelper, "_notify") as notify:
+            rc = cmuxhelper.main(["connect", "app@h"])
+        run.assert_not_called()
+        notify.assert_called_once()
+        self.assertEqual(rc, 1)
+
+    def test_connect_runs_when_running(self):
+        with mock.patch.object(cmuxhelper, "cmux_running", return_value=True), \
+                mock.patch.object(cmuxhelper, "_run") as run, \
+                mock.patch.object(cmuxhelper, "_notify") as notify:
+            rc = cmuxhelper.main(["connect", "app@h"])
+        run.assert_called_once_with(cmuxhelper.cmd_ssh("app@h"))
+        notify.assert_not_called()
+        self.assertEqual(rc, 0)
+
+    def test_send_aborts_when_not_running(self):
+        with mock.patch.object(cmuxhelper, "cmux_running", return_value=False), \
+                mock.patch.object(cmuxhelper, "_run") as run, \
+                mock.patch.object(cmuxhelper, "_notify"):
+            rc = cmuxhelper.main(["send", "app@h"])
+        run.assert_not_called()
+        self.assertEqual(rc, 1)
 
 
 class RunTests(unittest.TestCase):

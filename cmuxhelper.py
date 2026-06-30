@@ -146,16 +146,27 @@ def build_alfred_items(hosts, aliases):
 
 
 def cmd_ssh(dest):
-    # Activate cmux first so the app is frontmost before `cmux ssh` runs,
-    # which is noticeably snappier than the reverse order.
-    return [["open", "-a", "cmux"], ["cmux", "ssh", dest]]
+    return [["cmux", "ssh", dest], ["open", "-a", "cmux"]]
 
 
 def cmd_send(dest, workspace):
     return [
-        ["open", "-a", "cmux"],
         ["cmux", "send", "--workspace", workspace, "ssh %s\\n" % dest],
+        ["open", "-a", "cmux"],
     ]
+
+
+def cmux_running():
+    """Return True if the cmux app/daemon answers `cmux ping` (exit 0).
+
+    Missing binary or any spawn error counts as not running.
+    """
+    try:
+        return subprocess.run(
+            ["cmux", "ping"], capture_output=True, check=False
+        ).returncode == 0
+    except OSError:
+        return False
 
 
 def aliases_path():
@@ -252,6 +263,10 @@ def main(argv=None):
         print(json.dumps({"items": filter_items(items, query)}, ensure_ascii=False))
         return 0
     dest = argv[1] if len(argv) > 1 else ""
+    if command in ("connect", "send"):
+        if not cmux_running():
+            _notify("cmux 未运行，请先启动 cmux 后重试")
+            return 1
     if command == "connect":
         _run(cmd_ssh(dest))
     elif command == "send":
