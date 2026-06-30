@@ -1,6 +1,21 @@
 #!/usr/bin/env python3
 """cmux-helper: Alfred workflow backend for SSH host selection via cmux."""
 
+import os
+
+
+DEFAULT_SAVED_HOSTS = "~/.ssh/saved_hosts"
+DEFAULT_SSH_CONFIG = "~/.ssh/config"
+
+
+def _read(path):
+    """Read a file at path (expanding ~), return empty string on OSError."""
+    try:
+        with open(os.path.expanduser(path), "r", encoding="utf-8") as f:
+            return f.read()
+    except OSError:
+        return ""
+
 
 def parse_saved_hosts(text):
     """Parse ~/.ssh/saved_hosts content into a list of `user@host` strings."""
@@ -39,4 +54,16 @@ def parse_ssh_config(text):
         elif key == "user" and patterns:
             user = value
     flush()
+    return hosts
+
+
+def collect_hosts(saved_hosts_path=DEFAULT_SAVED_HOSTS, ssh_config_path=DEFAULT_SSH_CONFIG):
+    """Read both sources, merge with saved_hosts first, dedup preserving order."""
+    merged = parse_saved_hosts(_read(saved_hosts_path)) + parse_ssh_config(_read(ssh_config_path))
+    hosts = []
+    seen = set()
+    for host in merged:
+        if host not in seen:
+            seen.add(host)
+            hosts.append(host)
     return hosts

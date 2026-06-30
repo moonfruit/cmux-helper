@@ -1,3 +1,5 @@
+import os
+import tempfile
 import unittest
 import cmuxhelper
 
@@ -32,6 +34,27 @@ class ParseSshConfigTests(unittest.TestCase):
 
     def test_empty_input(self):
         self.assertEqual(cmuxhelper.parse_ssh_config(""), [])
+
+
+class CollectHostsTests(unittest.TestCase):
+    def test_merges_and_dedups_preserving_order(self):
+        with tempfile.TemporaryDirectory() as d:
+            saved = os.path.join(d, "saved_hosts")
+            config = os.path.join(d, "config")
+            with open(saved, "w") as f:
+                f.write("app@10.1.2.34\ndev@10.1.2.32\n")
+            with open(config, "w") as f:
+                f.write("Host 10.1.2.34\n    User app\nHost newbox\n    User gpp\n")
+            self.assertEqual(
+                cmuxhelper.collect_hosts(saved, config),
+                ["app@10.1.2.34", "dev@10.1.2.32", "gpp@newbox"],
+            )
+
+    def test_missing_files_return_empty(self):
+        self.assertEqual(
+            cmuxhelper.collect_hosts("/no/such/saved", "/no/such/config"),
+            [],
+        )
 
 
 if __name__ == "__main__":
