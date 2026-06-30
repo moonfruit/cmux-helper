@@ -176,12 +176,22 @@ def _current_workspace():
     return out or "workspace:1"
 
 
+def _as_applescript(text):
+    """Quote a string as an AppleScript string literal, keeping Unicode literal.
+
+    json.dumps with ensure_ascii=True emits \\uXXXX escapes that AppleScript
+    cannot parse; ensure_ascii=False keeps the UTF-8 characters and still
+    escapes the quote and backslash, which is what AppleScript expects.
+    """
+    return json.dumps(text, ensure_ascii=False)
+
+
 def _prompt(prompt_text, default):
     """Show a macOS text dialog; return entered text, or None if cancelled."""
     script = (
         'set r to text returned of (display dialog %s default answer %s '
         'buttons {"取消", "确定"} cancel button "取消" default button "确定")\nreturn r'
-        % (json.dumps(prompt_text), json.dumps(default))
+        % (_as_applescript(prompt_text), _as_applescript(default))
     )
     proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, check=False)
     if proc.returncode != 0:
@@ -203,12 +213,25 @@ def _do_alias(host):
     save_aliases(path, apply_alias(data, host, alias, tags))
 
 
+def filter_items(items, query):
+    """Keep items whose match text contains every whitespace-separated token.
+
+    Case-insensitive substring matching so a host, IP fragment, alias, or tag
+    all filter the list. An empty/blank query returns every item unchanged.
+    """
+    tokens = query.lower().split()
+    if not tokens:
+        return items
+    return [i for i in items if all(t in i.get("match", "").lower() for t in tokens)]
+
+
 def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else "filter"
     if command == "filter":
-        items = build_alfred_items(collect_hosts(), load_aliases(aliases_path()))
-        print(json.dumps(items, ensure_ascii=False))
+        query = argv[1] if len(argv) > 1 else ""
+        items = build_alfred_items(collect_hosts(), load_aliases(aliases_path()))["items"]
+        print(json.dumps({"items": filter_items(items, query)}, ensure_ascii=False))
         return 0
     dest = argv[1] if len(argv) > 1 else ""
     if command == "connect":

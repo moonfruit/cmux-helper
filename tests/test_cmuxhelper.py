@@ -136,5 +136,48 @@ class CommandTests(unittest.TestCase):
         self.assertIn("items", parsed)
 
 
+class FilterItemsTests(unittest.TestCase):
+    def _items(self):
+        return cmuxhelper.build_alfred_items(
+            ["app@10.1.2.34", "dev@10.1.2.32"],
+            {"app@10.1.2.34": {"alias": "生产A", "tags": ["prod"]}},
+        )["items"]
+
+    def test_empty_query_returns_all(self):
+        items = self._items()
+        self.assertEqual(cmuxhelper.filter_items(items, ""), items)
+
+    def test_whitespace_query_returns_all(self):
+        items = self._items()
+        self.assertEqual(cmuxhelper.filter_items(items, "   "), items)
+
+    def test_substring_on_ip(self):
+        out = cmuxhelper.filter_items(self._items(), "2.34")
+        self.assertEqual([i["arg"] for i in out], ["app@10.1.2.34"])
+
+    def test_matches_alias(self):
+        out = cmuxhelper.filter_items(self._items(), "生产")
+        self.assertEqual([i["arg"] for i in out], ["app@10.1.2.34"])
+
+    def test_case_insensitive(self):
+        out = cmuxhelper.filter_items(self._items(), "DEV")
+        self.assertEqual([i["arg"] for i in out], ["dev@10.1.2.32"])
+
+    def test_multiple_tokens_all_must_match(self):
+        out = cmuxhelper.filter_items(self._items(), "dev 32")
+        self.assertEqual([i["arg"] for i in out], ["dev@10.1.2.32"])
+
+    def test_no_match_returns_empty(self):
+        self.assertEqual(cmuxhelper.filter_items(self._items(), "zzz"), [])
+
+
+class AppleScriptStrTests(unittest.TestCase):
+    def test_keeps_unicode_literal(self):
+        self.assertEqual(cmuxhelper._as_applescript("别名"), '"别名"')
+
+    def test_escapes_quote_and_backslash(self):
+        self.assertEqual(cmuxhelper._as_applescript('a"b\\c'), '"a\\"b\\\\c"')
+
+
 if __name__ == "__main__":
     unittest.main()
