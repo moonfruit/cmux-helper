@@ -120,13 +120,6 @@ def build_alfred_items(hosts, aliases):
     - autocomplete = alias or host
     - mods = cmd and alt with custom subtitles and arg
     """
-    if not hosts:
-        return {"items": [{
-            "uid": "__no_hosts__",
-            "title": "未找到主机",
-            "subtitle": "请检查 ~/.ssh/saved_hosts 或 ~/.ssh/config",
-            "valid": False,
-        }]}
     items = []
     for host in hosts:
         meta = aliases.get(host, {})
@@ -252,11 +245,6 @@ def main(argv=None):
     argv = list(sys.argv[1:] if argv is None else argv)
     command = argv[0] if argv else "filter"
     if command == "filter":
-        # Alfred may launch the script under a non-UTF-8 locale; force UTF-8
-        # so printing Chinese aliases/titles never raises UnicodeEncodeError.
-        reconfigure = getattr(sys.stdout, "reconfigure", None)
-        if reconfigure is not None:
-            reconfigure(encoding="utf-8")
         query = argv[1] if len(argv) > 1 else ""
         items = build_alfred_items(collect_hosts(), load_aliases(aliases_path()))["items"]
         print(json.dumps({"items": filter_items(items, query)}, ensure_ascii=False))
