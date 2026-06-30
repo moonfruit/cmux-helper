@@ -180,7 +180,7 @@ def _prompt(prompt_text, default):
     """Show a macOS text dialog; return entered text, or None if cancelled."""
     script = (
         'set r to text returned of (display dialog %s default answer %s '
-        'buttons {"取消", "确定"} default button "确定")\nreturn r'
+        'buttons {"取消", "确定"} cancel button "取消" default button "确定")\nreturn r'
         % (json.dumps(prompt_text), json.dumps(default))
     )
     proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, check=False)
@@ -190,7 +190,8 @@ def _prompt(prompt_text, default):
 
 
 def _do_alias(host):
-    data = load_aliases(aliases_path())
+    path = aliases_path()
+    data = load_aliases(path)
     current = data.get(host, {})
     alias = _prompt("别名 (留空清除) — %s" % host, current.get("alias", ""))
     if alias is None:
@@ -199,7 +200,7 @@ def _do_alias(host):
     if tags_raw is None:
         return
     tags = tags_raw.split(",")
-    save_aliases(aliases_path(), apply_alias(data, host, alias, tags))
+    save_aliases(path, apply_alias(data, host, alias, tags))
 
 
 def main(argv=None):
