@@ -3,6 +3,8 @@
 
 import json
 import os
+import subprocess
+import sys
 
 
 DEFAULT_SAVED_HOSTS = "~/.ssh/saved_hosts"
@@ -141,3 +143,81 @@ def build_alfred_items(hosts, aliases):
             },
         })
     return {"items": items}
+
+
+def cmd_ssh(dest):
+    return [["cmux", "ssh", dest], ["open", "-a", "cmux"]]
+
+
+def cmd_send(dest, workspace):
+    return [
+        ["cmux", "send", "--workspace", workspace, "ssh %s\\n" % dest],
+        ["open", "-a", "cmux"],
+    ]
+
+
+def aliases_path():
+    data_dir = os.environ.get("alfred_workflow_data") or os.path.expanduser("~/.cmux-helper")
+    return os.path.join(data_dir, "aliases.json")
+
+
+def _run(commands):
+    for cmd in commands:
+        subprocess.run(cmd, check=False)
+
+
+def _current_workspace():
+    try:
+        out = subprocess.run(
+            ["cmux", "current-workspace"], capture_output=True, text=True, check=False
+        ).stdout.strip()
+    except OSError:
+        out = ""
+    return out or "workspace:1"
+
+
+def _prompt(prompt_text, default):
+    """Show a macOS text dialog; return entered text, or None if cancelled."""
+    script = (
+        'set r to text returned of (display dialog %s default answer %s '
+        'buttons {"取消", "确定"} default button "确定")\nreturn r'
+        % (json.dumps(prompt_text), json.dumps(default))
+    )
+    proc = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, check=False)
+    if proc.returncode != 0:
+        return None
+    return proc.stdout.rstrip("\n")
+
+
+def _do_alias(host):
+    data = load_aliases(aliases_path())
+    current = data.get(host, {})
+    alias = _prompt("别名 (留空清除) — %s" % host, current.get("alias", ""))
+    if alias is None:
+        return
+    tags_raw = _prompt("标签，逗号分隔 — %s" % host, ", ".join(current.get("tags", [])))
+    if tags_raw is None:
+        return
+    tags = tags_raw.split(",")
+    save_aliases(aliases_path(), apply_alias(data, host, alias, tags))
+
+
+def main(argv=None):
+    argv = list(sys.argv[1:] if argv is None else argv)
+    command = argv[0] if argv else "filter"
+    if command == "filter":
+        items = build_alfred_items(collect_hosts(), load_aliases(aliases_path()))
+        print(json.dumps(items, ensure_ascii=False))
+        return 0
+    dest = argv[1] if len(argv) > 1 else ""
+    if command == "connect":
+        _run(cmd_ssh(dest))
+    elif command == "send":
+        _run(cmd_send(dest, _current_workspace()))
+    elif command == "alias":
+        _do_alias(dest)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

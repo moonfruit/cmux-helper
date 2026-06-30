@@ -106,5 +106,35 @@ class BuildItemsTests(unittest.TestCase):
         self.assertIn("#prod", item["subtitle"])
 
 
+class CommandTests(unittest.TestCase):
+    def test_cmd_ssh(self):
+        self.assertEqual(
+            cmuxhelper.cmd_ssh("app@h"),
+            [["cmux", "ssh", "app@h"], ["open", "-a", "cmux"]],
+        )
+
+    def test_cmd_send_has_literal_newline(self):
+        cmds = cmuxhelper.cmd_send("app@h", "workspace:1")
+        self.assertEqual(cmds[0], ["cmux", "send", "--workspace", "workspace:1", "ssh app@h\\n"])
+        self.assertEqual(cmds[1], ["open", "-a", "cmux"])
+
+    def test_aliases_path_uses_env(self):
+        os.environ["alfred_workflow_data"] = "/tmp/wfdata"
+        try:
+            self.assertEqual(cmuxhelper.aliases_path(), "/tmp/wfdata/aliases.json")
+        finally:
+            del os.environ["alfred_workflow_data"]
+
+    def test_main_filter_prints_json(self):
+        import io
+        import contextlib
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            rc = cmuxhelper.main(["filter", ""])
+        self.assertEqual(rc, 0)
+        parsed = json.loads(buf.getvalue())
+        self.assertIn("items", parsed)
+
+
 if __name__ == "__main__":
     unittest.main()
