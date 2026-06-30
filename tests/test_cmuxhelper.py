@@ -85,5 +85,26 @@ class AliasTests(unittest.TestCase):
         self.assertEqual(out, {})
 
 
+class BuildItemsTests(unittest.TestCase):
+    def test_item_without_alias(self):
+        out = cmuxhelper.build_alfred_items(["app@h"], {})
+        item = out["items"][0]
+        self.assertEqual(item["title"], "app@h")
+        self.assertEqual(item["arg"], "app@h")
+        self.assertEqual(item["uid"], "app@h")
+        self.assertEqual(item["match"], "app@h")
+        self.assertIn("↵ ssh", item["subtitle"])
+        self.assertEqual(item["mods"]["cmd"]["arg"], "app@h")
+        self.assertEqual(item["mods"]["alt"]["arg"], "app@h")
+
+    def test_item_with_alias_and_tags(self):
+        aliases = {"app@h": {"alias": "生产A", "tags": ["prod", "app"]}}
+        item = cmuxhelper.build_alfred_items(["app@h"], aliases)["items"][0]
+        self.assertEqual(item["title"], "生产A  ·  app@h")
+        self.assertEqual(item["autocomplete"], "生产A")
+        self.assertEqual(item["match"], "app@h 生产A prod app")
+        self.assertIn("#prod", item["subtitle"])
+
+
 if __name__ == "__main__":
     unittest.main()

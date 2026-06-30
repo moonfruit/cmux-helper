@@ -105,3 +105,39 @@ def apply_alias(data, host, alias, tags):
         entry["tags"] = tags
     result[host] = entry
     return result
+
+
+def build_alfred_items(hosts, aliases):
+    """Build Alfred Script Filter items from hosts and aliases.
+
+    Returns {"items": [...]}, where each item has:
+    - uid, arg = host
+    - title = "alias  ·  host" if alias exists, else host
+    - subtitle = "↵ ssh   ⌘ send   ⌥ 设别名" + optional "  #tag1 #tag2"
+    - match = space-separated host, alias (if any), and tags
+    - autocomplete = alias or host
+    - mods = cmd and alt with custom subtitles and arg
+    """
+    items = []
+    for host in hosts:
+        meta = aliases.get(host, {})
+        alias = meta.get("alias", "")
+        tags = meta.get("tags", [])
+        title = "%s  ·  %s" % (alias, host) if alias else host
+        subtitle = "↵ ssh   ⌘ send   ⌥ 设别名"
+        if tags:
+            subtitle += "  " + " ".join("#" + t for t in tags)
+        match = " ".join([host] + ([alias] if alias else []) + list(tags))
+        items.append({
+            "uid": host,
+            "title": title,
+            "subtitle": subtitle,
+            "arg": host,
+            "match": match,
+            "autocomplete": alias or host,
+            "mods": {
+                "cmd": {"subtitle": "cmux send: ssh %s" % host, "arg": host},
+                "alt": {"subtitle": "设置别名/标签: %s" % host, "arg": host},
+            },
+        })
+    return {"items": items}
