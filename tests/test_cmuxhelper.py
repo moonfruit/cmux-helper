@@ -246,3 +246,57 @@ class RunTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FindCmuxHelperTests(unittest.TestCase):
+    def _exe(self, d):
+        path = os.path.join(d, "cmux-helper")
+        with open(path, "w") as f:
+            f.write("#!/bin/sh\n")
+        os.chmod(path, 0o755)
+        return path
+
+    def test_found_in_path(self):
+        with tempfile.TemporaryDirectory() as d, tempfile.TemporaryDirectory() as home:
+            exe = self._exe(d)
+            with mock.patch.dict(os.environ, {"PATH": d, "HOME": home}):
+                self.assertEqual(cmuxhelper.find_cmux_helper(), exe)
+
+    def test_falls_back_to_local_bin(self):
+        with tempfile.TemporaryDirectory() as home:
+            local_bin = os.path.join(home, ".local", "bin")
+            os.makedirs(local_bin)
+            exe = self._exe(local_bin)
+            with mock.patch.dict(os.environ, {"PATH": "/nonexistent", "HOME": home}):
+                self.assertEqual(cmuxhelper.find_cmux_helper(), exe)
+
+    def test_missing_returns_none(self):
+        with tempfile.TemporaryDirectory() as home:
+            with mock.patch.dict(os.environ, {"PATH": "/nonexistent", "HOME": home}):
+                self.assertIsNone(cmuxhelper.find_cmux_helper())
+
+
+class SwapTests(unittest.TestCase):
+    def test_filter_empty_when_missing(self):
+        with mock.patch.object(cmuxhelper, "find_cmux_helper", return_value=None):
+            self.assertEqual(cmuxhelper.build_swap_items(), {"items": []})
+
+    def test_filter_one_item_when_present(self):
+        with mock.patch.object(cmuxhelper, "find_cmux_helper", return_value="/x/cmux-helper"):
+            items = cmuxhelper.build_swap_items()["items"]
+        self.assertEqual(len(items), 1)
+        self.assertTrue(items[0]["valid"])
+
+    def test_swap_runs_helper(self):
+        with mock.patch.object(cmuxhelper, "find_cmux_helper", return_value="/x/cmux-helper"), \
+             mock.patch.object(cmuxhelper, "_run") as run:
+            self.assertEqual(cmuxhelper.main(["swap"]), 0)
+        run.assert_called_once_with([["/x/cmux-helper", "swap"]])
+
+    def test_swap_notifies_when_missing(self):
+        with mock.patch.object(cmuxhelper, "find_cmux_helper", return_value=None), \
+             mock.patch.object(cmuxhelper, "_run") as run, \
+             mock.patch.object(cmuxhelper, "_notify") as notify:
+            self.assertEqual(cmuxhelper.main(["swap"]), 1)
+        run.assert_not_called()
+        notify.assert_called_once()

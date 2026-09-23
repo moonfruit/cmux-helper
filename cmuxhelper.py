@@ -3,6 +3,7 @@
 
 import json
 import os
+import shutil
 import subprocess
 import sys
 
@@ -169,6 +170,33 @@ def cmux_running():
         return False
 
 
+def find_cmux_helper():
+    """Locate cmux-helper on PATH or in ~/.local/bin; return None if absent.
+
+    Alfred runs scripts with a minimal PATH, so ~/.local/bin is searched
+    explicitly as a fallback.
+    """
+    dirs = os.environ.get("PATH", "").split(os.pathsep)
+    dirs.append(os.path.expanduser("~/.local/bin"))
+    return shutil.which("cmux-helper", path=os.pathsep.join(d for d in dirs if d))
+
+
+def build_swap_items():
+    """Script Filter items for `swap`: empty when cmux-helper is missing.
+
+    An empty result makes Alfred fall through as if the keyword did not exist.
+    """
+    if not find_cmux_helper():
+        return {"items": []}
+    return {"items": [{
+        "uid": "cmux-swap",
+        "title": "cmux swap",
+        "subtitle": "图形化选择并交换两个 pane 的位置",
+        "arg": "",
+        "valid": True,
+    }]}
+
+
 def aliases_path():
     # Keep aliases alongside saved_hosts/config so users can hand-edit them.
     return os.path.expanduser("~/.ssh/aliases.json")
@@ -261,6 +289,16 @@ def main(argv=None):
         query = argv[1] if len(argv) > 1 else ""
         items = build_alfred_items(collect_hosts(), load_aliases(aliases_path()))["items"]
         print(json.dumps({"items": filter_items(items, query)}, ensure_ascii=False))
+        return 0
+    if command == "swap-filter":
+        print(json.dumps(build_swap_items(), ensure_ascii=False))
+        return 0
+    if command == "swap":
+        helper = find_cmux_helper()
+        if not helper:
+            _notify("找不到 cmux-helper（PATH 或 ~/.local/bin）")
+            return 1
+        _run([[helper, "swap"]])
         return 0
     dest = argv[1] if len(argv) > 1 else ""
     if command in ("connect", "send"):

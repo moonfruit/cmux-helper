@@ -1,6 +1,6 @@
 # cmux-helper
 
-Alfred workflow：关键词 `ssh` 选择预设 SSH 主机，经 cmux 连接。
+Alfred workflow：关键词 `ssh` 选择预设 SSH 主机，经 cmux 连接；关键词 `swap` 交换 pane。
 
 ## 操作
 
@@ -10,6 +10,12 @@ Alfred workflow：关键词 `ssh` 选择预设 SSH 主机，经 cmux 连接。
 
 > `↵` / `⌘ ↵` 执行前会先 `cmux ping` 确认 cmux 已运行；若未运行，弹出通知提示先手动启动 cmux，不再尝试冷启动。
 
+## swap
+
+关键词 `swap`：调用 `cmux-helper swap`，图形化选择并交换两个 pane 的位置。
+
+`cmux-helper` 按 `PATH` → `~/.local/bin` 顺序查找；找不到时 Script Filter 返回空结果，Alfred 视同该关键词不存在。
+
 ## 主机来源
 
 - `~/.ssh/saved_hosts`（每行 `user@host`）
@@ -17,7 +23,7 @@ Alfred workflow：关键词 `ssh` 选择预设 SSH 主机，经 cmux 连接。
 
 ## 安装
 
-依赖：`/opt/homebrew/bin/python3`、`cmux` CLI。
+依赖：`/opt/homebrew/bin/python3`、`cmux` CLI；`swap` 另需 `cmux-helper`（可选）。
 
 - 开发软链：`make link`（改完即生效），卸载 `make unlink`
 - 打包分发：`make package` 生成 `cmux-helper.alfredworkflow`，双击导入 Alfred

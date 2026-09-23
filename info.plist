@@ -41,6 +41,19 @@
 				<false/>
 			</dict>
 		</array>
+		<key>SF000000-0000-0000-0000-0000000000F2</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>AC000000-0000-0000-0000-0000000000C4</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
 	</dict>
 	<key>createdby</key>
 	<string>moon</string>
@@ -170,38 +183,125 @@
 			<key>version</key>
 			<integer>2</integer>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
+				<integer>0</integer>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>escaping</key>
+				<integer>0</integer>
+				<key>keyword</key>
+				<string>swap</string>
+				<key>queuedelaycustom</key>
+				<integer>3</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<true/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>/opt/homebrew/bin/python3 cmuxhelper.py swap-filter</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>图形化选择并交换两个 pane 的位置</string>
+				<key>title</key>
+				<string>cmux swap</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.scriptfilter</string>
+			<key>uid</key>
+			<string>SF000000-0000-0000-0000-0000000000F2</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>/opt/homebrew/bin/python3 cmuxhelper.py swap</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>AC000000-0000-0000-0000-0000000000C4</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
 	</array>
 	<key>readme</key>
-	<string>关键词 ssh：↵ cmux ssh（前台）· ⌘ cmux send · ⌥ 设置别名/标签</string>
+	<string>关键词 ssh：↵ cmux ssh（前台）· ⌘ cmux send · ⌥ 设置别名/标签
+关键词 swap：图形化交换两个 pane（需 cmux-helper，未安装时不响应）</string>
 	<key>uidata</key>
 	<dict>
-		<key>SF000000-0000-0000-0000-0000000000F1</key>
-		<dict>
-			<key>xpos</key>
-			<real>30</real>
-			<key>ypos</key>
-			<real>120</real>
-		</dict>
 		<key>AC000000-0000-0000-0000-0000000000C1</key>
 		<dict>
 			<key>xpos</key>
-			<real>350</real>
+			<real>350.0</real>
 			<key>ypos</key>
-			<real>30</real>
+			<real>30.0</real>
 		</dict>
 		<key>AC000000-0000-0000-0000-0000000000C2</key>
 		<dict>
 			<key>xpos</key>
-			<real>350</real>
+			<real>350.0</real>
 			<key>ypos</key>
-			<real>150</real>
+			<real>150.0</real>
 		</dict>
 		<key>AC000000-0000-0000-0000-0000000000C3</key>
 		<dict>
 			<key>xpos</key>
-			<real>350</real>
+			<real>350.0</real>
 			<key>ypos</key>
-			<real>270</real>
+			<real>270.0</real>
+		</dict>
+		<key>AC000000-0000-0000-0000-0000000000C4</key>
+		<dict>
+			<key>xpos</key>
+			<integer>350</integer>
+			<key>ypos</key>
+			<integer>400</integer>
+		</dict>
+		<key>SF000000-0000-0000-0000-0000000000F1</key>
+		<dict>
+			<key>xpos</key>
+			<real>30.0</real>
+			<key>ypos</key>
+			<real>120.0</real>
+		</dict>
+		<key>SF000000-0000-0000-0000-0000000000F2</key>
+		<dict>
+			<key>xpos</key>
+			<integer>30</integer>
+			<key>ypos</key>
+			<integer>400</integer>
 		</dict>
 	</dict>
 	<key>variablesdontexport</key>
