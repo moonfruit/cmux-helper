@@ -111,7 +111,14 @@ class CommandTests(unittest.TestCase):
     def test_cmd_ssh(self):
         self.assertEqual(
             cmuxhelper.cmd_ssh("app@h"),
-            [["cmux", "ssh", "app@h"], ["open", "-a", "cmux"]],
+            [["cmux", "ssh", "app@h", "--name", "app@h"], ["open", "-a", "cmux"]],
+        )
+
+    def test_cmd_ssh_names_workspace_after_destination(self):
+        self.assertIn("--name", cmuxhelper.cmd_ssh("dev@1.2.3.4")[0])
+        self.assertEqual(
+            cmuxhelper.cmd_ssh("dev@1.2.3.4")[0][-1],
+            "dev@1.2.3.4",
         )
 
     def test_cmd_send_has_literal_newline(self):

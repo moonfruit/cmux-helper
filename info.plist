@@ -257,7 +257,7 @@
 		</dict>
 	</array>
 	<key>readme</key>
-	<string>关键词 ssh：↵ cmux ssh（前台）· ⌘ cmux send · ⌥ 设置别名/标签
+	<string>关键词 ssh：↵ cmux ssh（前台，workspace 名=SSH dest）· ⌘ cmux send · ⌥ 设置别名/标签
 关键词 swap：图形化交换两个 pane（需 cmux-helper，未安装时不响应）</string>
 	<key>uidata</key>
 	<dict>

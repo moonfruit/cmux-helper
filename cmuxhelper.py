@@ -147,7 +147,9 @@ def build_alfred_items(hosts, aliases):
 
 
 def cmd_ssh(dest):
-    return [["cmux", "ssh", dest], ["open", "-a", "cmux"]]
+    # --name 让新建 workspace 的标题就是 SSH dest（如 dev@1.2.3.4），
+    # 不受 aliases.json 里的别名影响。
+    return [["cmux", "ssh", dest, "--name", dest], ["open", "-a", "cmux"]]
 
 
 def cmd_send(dest, workspace):

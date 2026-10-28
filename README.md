@@ -4,7 +4,7 @@ Alfred workflow：关键词 `ssh` 选择预设 SSH 主机，经 cmux 连接；�
 
 ## 操作
 
-- `↵`：`cmux ssh user@host` 新建 workspace 并把 cmux 激活到前台
+- `↵`：`cmux ssh user@host --name user@host` 新建 workspace（标题即 SSH dest，与别名无关）并把 cmux 激活到前台
 - `⌘ ↵`：向当前 cmux 终端发送 `ssh user@host`（`cmux send`）
 - `⌥ ↵`：设置/清除该主机的别名与标签（写入 `aliases.json`）
 
